@@ -27,6 +27,11 @@ import (
 	"github.com/chenjiandongx/grogudb/pkg/logx"
 )
 
+const (
+	KB = 1024
+	MB = 1024 * KB
+)
+
 func removeDir(dir string) {
 	if err := os.RemoveAll(dir); err != nil {
 		panic(err)
@@ -132,7 +137,7 @@ func assertFastRange(t require.TestingT, bucket *Bucket, iter int) {
 const (
 	bucketCount   = 2
 	iterCount     = 500
-	maxMemorySize = 1024 * 10
+	maxMemorySize = 10 * KB
 )
 
 func TestEmpty(t *testing.T) {

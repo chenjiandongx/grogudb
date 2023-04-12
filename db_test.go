@@ -76,3 +76,17 @@ func TestGetMemoryBuckets(t *testing.T) {
 	buckets := db.getMemoryBuckets()
 	require.Len(t, buckets, 0)
 }
+
+func TestState(t *testing.T) {
+	runGrogudbTest(t, nil, func(t require.TestingT, db *DB) {
+		s := db.State()
+		require.Zero(t, s)
+	}, nil)
+}
+
+func TestStats(t *testing.T) {
+	runGrogudbTest(t, nil, func(t require.TestingT, db *DB) {
+		s := db.Stats()
+		require.Zero(t, s)
+	}, nil)
+}

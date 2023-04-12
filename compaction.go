@@ -181,7 +181,7 @@ func newCompactor(fragmentation float64, clearAtFn func(string) int64, onExist f
 }
 
 // mergeBucketNames 合并多个 disk segments 的 bucket names 并进行排序
-func (c *compactor) mergeBucketNames(diskSegs ...*diskSegment) []string {
+func mergeBucketNames(diskSegs ...*diskSegment) []string {
 	unique := map[string]struct{}{}
 	for _, diskSeg := range diskSegs {
 		for name := range diskSeg.pos.Record {
@@ -275,7 +275,7 @@ func (c *compactor) doCompact(diskSegs ...*diskSegment) (*diskSegment, error) {
 	}
 	defer keysF.Close()
 
-	buckets := c.mergeBucketNames(diskSegs...)
+	buckets := mergeBucketNames(diskSegs...)
 LOOP:
 	for _, bucket := range buckets {
 		for _, diskSeg := range diskSegs {
