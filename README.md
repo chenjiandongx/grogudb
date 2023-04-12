@@ -1,5 +1,9 @@
 # grogudb
 
+[![Docs](https://godoc.org/github.com/chenjiandongx/grogudb?status.svg)](https://pkg.go.dev/github.com/chenjiandongx/grogudb)
+[![Build Status](https://github.com/chenjiandongx/grogudb/actions/workflows/test.yaml/badge.svg?branch=master)](https://github.com/chenjiandongx/grogudb/actions)
+[![Go Report Card](https://goreportcard.com/badge/chenjiandongx/grogudb "Go Report Card")](https://goreportcard.com/report/chenjiandongx/grogudb)
+
 grogudb 是一个为高频 Put/Has/Del/Range 操作而设计的持久化 KV 数据库。
 
 <img width="600px" alt="image" src="https://user-images.githubusercontent.com/19553554/230955362-226ec6e5-69c7-4824-88b1-c56bf32ff3e0.png">
