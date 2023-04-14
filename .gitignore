@@ -16,4 +16,5 @@
 .vscode/
 .DS_Store
 
-grogu
+grogudb
+coverage.txt

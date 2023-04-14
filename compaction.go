@@ -450,6 +450,7 @@ func (db *DB) removeDiskSegments(segs ...*diskSegment) {
 
 // Compact 合并 disk segment 减少磁盘空间占用
 // 同一时刻只能有一次 Compact 操作 执行操作返回 true 反之返回 false
+// 此 API 用户一般无需手动调用
 func (db *DB) Compact() (bool, error) {
 	var compacted bool
 	if !db.state.compacting.CompareAndSwap(false, true) {

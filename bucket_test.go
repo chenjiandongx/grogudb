@@ -1220,3 +1220,39 @@ func benchmarkBucketHas(b *testing.B) {
 		b.Logf("Benchmark Has elapsed[%s]: iter=%d, bucket=%d, ops=%f, stat=%+v", since, benchmarkIter, benchmarkBuckets, ops, db.Stats())
 	}, nil)
 }
+
+func BenchmarkBucketDel(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		benchmarkBucketDel(b)
+	}
+}
+
+func benchmarkBucketDel(b *testing.B) {
+	runGrogudbTest(b, nil, func(t require.TestingT, db *DB) {
+		wg := sync.WaitGroup{}
+		for i := 0; i < benchmarkBuckets; i++ {
+			wg.Add(1)
+			n := i
+			go func() {
+				defer wg.Done()
+				bucket := db.GetOrCreateBucket(bucketNum(n))
+				for j := 0; j < benchmarkIter; j++ {
+					_ = bucket.Put(keyNum(j), valNum(j))
+				}
+			}()
+		}
+		wg.Wait()
+
+		start := time.Now()
+		for i := 0; i < benchmarkBuckets; i++ {
+			bucket := db.GetOrCreateBucket(bucketNum(i))
+			for j := 0; j < benchmarkIter; j++ {
+				_ = bucket.Del(keyNum(j))
+			}
+		}
+
+		since := time.Since(start)
+		ops := float64(benchmarkIter*benchmarkBuckets) / since.Seconds()
+		b.Logf("Benchmark Del elapsed[%s]: iter=%d, bucket=%d, ops=%f, stat=%+v", since, benchmarkIter, benchmarkBuckets, ops, db.Stats())
+	}, nil)
+}

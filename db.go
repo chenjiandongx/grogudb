@@ -85,6 +85,9 @@ func (b Bytes) String() string {
 	return string(b)
 }
 
+// DB grogudb 实例实现
+//
+// 管控着所有的 db 操作行为以及 db 的状态管理
 type DB struct {
 	opts *Options
 
@@ -110,6 +113,7 @@ type DB struct {
 	waiting wait.Waiting
 }
 
+// Open 打开一个 db 实例 打开 db 链接时会持有文件锁 避免二次打开
 func Open(path string, opts *Options) (*DB, error) {
 	if path == "" {
 		return nil, ErrEmptyDBPath
@@ -180,6 +184,8 @@ func (db *DB) loopGc() {
 	}
 }
 
+// Gc 负责清理 handing 状态的 disk segment
+// 此 API 用户一般无需手动调用
 func (db *DB) Gc() {
 	db.diskMut.Lock()
 	defer db.diskMut.Unlock()
@@ -389,6 +395,7 @@ func (db *DB) rotate() error {
 	return nil
 }
 
+// Buckets 返回当前 db 所有 buckets 名称
 func (db *DB) Buckets() []string {
 	db.memMut.Lock()
 	defer db.memMut.Unlock()
@@ -413,14 +420,17 @@ func (db *DB) getIterReleaser() *iterReleaser {
 	return newDiskSegmentVersion(segs)
 }
 
+// Stats 返回 db 操作统计情况
 func (db *DB) Stats() Stats {
 	return db.stats.Load()
 }
 
+// State 返回 db 状态
 func (db *DB) State() State {
 	return db.state.Load()
 }
 
+// GetOrCreateBucket 获取或创建 Bucket 实例
 func (db *DB) GetOrCreateBucket(name string) *Bucket {
 	db.memMut.RLock()
 	seg := db.memorySegs[name]
@@ -461,6 +471,7 @@ func (db *DB) GetOrCreateBucket(name string) *Bucket {
 	return bucket
 }
 
+// Close 关闭 db
 func (db *DB) Close() error {
 	if !db.state.closed.CompareAndSwap(false, true) {
 		return ErrClosed
