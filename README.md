@@ -3,6 +3,7 @@
 [![Docs](https://godoc.org/github.com/chenjiandongx/grogudb?status.svg)](https://pkg.go.dev/github.com/chenjiandongx/grogudb)
 [![Build Status](https://github.com/chenjiandongx/grogudb/actions/workflows/test.yaml/badge.svg?branch=master)](https://github.com/chenjiandongx/grogudb/actions)
 [![Go Report Card](https://goreportcard.com/badge/chenjiandongx/grogudb "Go Report Card")](https://goreportcard.com/report/chenjiandongx/grogudb)
+[![Codecov](https://codecov.io/gh/chenjiandongx/grogudb/branch/master/graph/badge.svg)](https://codecov.io/gh/chenjiandongx/grogudb)
 
 grogudb 是一个为高频 Put/Has/Del/Range 操作而设计的持久化 KV 数据库。
 
@@ -38,6 +39,25 @@ func main() {
 	
 	// db.Gc() 手动执行 Gc，正常情况无需用户手动执行
 	// db.Compact() 手动执行 Compact，正常情况无需用户手动执行
+}
+```
+
+设置 logger
+
+```golang
+package main
+
+import "github.com/chenjiandongx/grogudb/pkg/logx"
+
+func main() {
+	// Logger 接口定义
+	// type Logger interface {
+	// 	Infof(format string, v ...interface{})
+	//	Errorf(format string, v ...interface{})
+	// }
+	
+	// 或者设置为 nil 则不输出任何日志
+	logx.SetLogger(nil)
 }
 ```
 
