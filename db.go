@@ -98,11 +98,11 @@ type DB struct {
 	bucketsKeys *uint64set.Sets
 	markBytesCh chan int64
 	path        string
-	clearAt     map[string]int64
+	clearAt     map[string]int64 // key is bucket name, val is seqID of segmentFile
 
 	memMut     sync.RWMutex
-	buckets    map[string]*Bucket
-	memorySegs map[string]*memorySegment
+	buckets    map[string]*Bucket        // key is bucket name
+	memorySegs map[string]*memorySegment // key is bucket name
 
 	diskMut         sync.Mutex
 	diskSegs        diskSegments
