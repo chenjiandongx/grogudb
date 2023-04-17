@@ -17,6 +17,7 @@ import (
 	"github.com/chenjiandongx/logger"
 )
 
+// Logger 接口定义
 type Logger interface {
 	Infof(format string, v ...interface{})
 	Errorf(format string, v ...interface{})
@@ -29,6 +30,7 @@ var logf Logger = logger.New(logger.Options{
 	Level:       logger.ErrorLevel,
 })
 
+// SetLogger 设置自定义 logger 可设置为 nil
 func SetLogger(logger Logger) {
 	logf = logger
 }

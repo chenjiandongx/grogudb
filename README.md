@@ -3,6 +3,7 @@
 [![Docs](https://godoc.org/github.com/chenjiandongx/grogudb?status.svg)](https://pkg.go.dev/github.com/chenjiandongx/grogudb)
 [![Build Status](https://github.com/chenjiandongx/grogudb/actions/workflows/test.yaml/badge.svg?branch=master)](https://github.com/chenjiandongx/grogudb/actions)
 [![Go Report Card](https://goreportcard.com/badge/chenjiandongx/grogudb "Go Report Card")](https://goreportcard.com/report/chenjiandongx/grogudb)
+[![Codecov](https://codecov.io/gh/chenjiandongx/grogudb/branch/master/graph/badge.svg)](https://codecov.io/gh/chenjiandongx/grogudb)
 
 grogudb 是一个为高频 Put/Has/Del/Range 操作而设计的持久化 KV 数据库。
 
@@ -22,38 +23,6 @@ grogudb 是一个为高频 Put/Has/Del/Range 操作而设计的持久化 KV 数�
 
 ### DB 操作
 
-DB 配置项
-
-```golang
-// Options 控制 DB 行为的配置项
-type Options struct {
-	// MaxMemSegmentBytes memory segment 最大允许字节
-	MaxMemSegmentBytes int
-
-	// MaxDiskSegmentBytes disk segment 最大允许字节
-	MaxDiskSegmentBytes int
-
-	// CompactFragmentation compact 碎片比例
-	// 即超过 HoldBytes 中需要被删除的字节数超过此比例时才需要 compact
-	CompactFragmentation float64
-
-	// CompactCheckInterval compact 巡检周期
-	CompactCheckInterval time.Duration
-
-	// CompactForceInterval 强制 compact 周期 即 compact 兜底行为 确保该周期内一定会执行一次 compact
-	// CompactForceInterval 必须大于 CompactCheckInterval
-	// 扫描磁盘是有 IO 开销 force 只是会忽略所有前置判断条件进行扫描 不代表会执行 compact 操作
-	CompactForceInterval time.Duration
-
-	// CompactKeyOpDelta compact 时会对两个 CompactCheckInterval 周期的 Put/Del 做差值计算
-	// 超过一定差值才会进行 compact 目的是为了尽量减少 compact 操作
-	CompactKeyOpDelta int
-
-	// GcInterval gc 巡检周期
-	GcInterval time.Duration
-}
-```
-
 打开 DB
 
 ```golang
@@ -67,6 +36,28 @@ func main() {
 		// handle err
 	}
 	defer db.Close()
+	
+	// db.Gc() 手动执行 Gc，正常情况无需用户手动执行
+	// db.Compact() 手动执行 Compact，正常情况无需用户手动执行
+}
+```
+
+设置 logger
+
+```golang
+package main
+
+import "github.com/chenjiandongx/grogudb/pkg/logx"
+
+func main() {
+	// Logger 接口定义
+	// type Logger interface {
+	// 	Infof(format string, v ...interface{})
+	//	Errorf(format string, v ...interface{})
+	// }
+	
+	// 或者设置为 nil 则不输出任何日志
+	logx.SetLogger(nil)
 }
 ```
 
@@ -75,17 +66,21 @@ func main() {
 ```golang
 bucket := db.GetOrCreateBucket("bucket0")
 
-// Clear 清空 Bucket 所有 key
-func (b *Bucket) Clear()
-
 // Put 新增 Key/Value 记录
-func (b *Bucket) Put(key, val []byte) error
+if err := bucket.Put([]byte("key1"), []byte("val1")); err != nil {
+	// handle err
+}
 
 // PutIf 当 Key 不存在的时候设置 Key/Value Key 存在时不做操作
-func (b *Bucket) PutIf(key, val []byte) error
+if err := bucket.PutIf([]byte("key1"), []byte("val1")); err != nil {
+	// handle err
+}
 
-// Del 删除指定 Key
-func (b *Bucket) Del(key []byte) error
+if err := bucket.Del([]byte("key1")); err != nil {
+	// handle err
+}
+
+// bucket.Clear() // 清理 Bucket 所有 keys
 ```
 
 ### Bucket 读操作
@@ -93,11 +88,11 @@ func (b *Bucket) Del(key []byte) error
 ```golang
 bucket := db.GetOrCreateBucket("bucket0")
 
-// Has 判断 Key 是否存在
-func (b *Bucket) Has(key []byte) bool
 
-// Count 返回 Bucket Keys 数量
-func (b *Bucket) Count() int
+// Has 判断 Key 是否存在
+if bucket.Has([]byte("key1")) {
+	// ...
+}
 
 // Get 返回指定 Key 对应的 Value
 //
@@ -108,20 +103,28 @@ func (b *Bucket) Count() int
 //  3. key 存在，在 memory segment 未命中，退避到 disk segment 检索
 //     由于 key 是没有排序的，因此必须按序扫描所有的 block 直至找到，此时会有读放大的情况（比如为了查找 10B 数据而扫描了 2MB 的 datablock）
 //     同时 disk segment 的搜索已经做了一些措施来尽量避免陷入 IO，如提前判断 key 是否存在，bloomfilter 加速过滤...
-func (b *Bucket) Get(key []byte) (Bytes, error)
+if b, err := bucket.Get([]byte("key1")); err != nil {
+	// ...
+}
 
 // Range 遍历每个 Key 并执行 fn 方法
 //
 // Range 返回的数据不允许直接修改 如果有修改需求 请使用 .Copy() 复制后的数据
 // 请勿在 Range 内调用 Bucket 其他 API 避免死锁
-func (b *Bucket) Range(fn func(key, val Bytes)) error
+if err := bucket.Range(func(key, val Bytes) {
+	// handle key/value
+})
 
 // FastRange 拷贝 memory segment 元素并遍历每个 Key 并执行 fn 方法
 //
 // 避免长期占用锁影响写入 但同时会带来一定的内存开销
 // Range 返回的数据不允许直接修改 如果有修改需求 请使用 .Copy() 复制后的数据
 // 请勿在 Range 内调用 Bucket 其他 API 避免死锁
-func (b *Bucket) FastRange(fn func(key, val Bytes)) error
+if err := bucket.FastRange(func(key, val Bytes) {
+	// handle key/value
+})
+
+// bucket.Count() // Count 返回 Bucket Keys 数量
 ```
 
 ## Benchmark
