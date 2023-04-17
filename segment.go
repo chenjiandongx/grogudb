@@ -43,7 +43,7 @@ type memSegCallback struct {
 // 所有数据优先写入到 memory segment 再定期 flush 到磁盘
 type memorySegment struct {
 	name      string
-	mut       sync.Mutex
+	mut       sync.RWMutex
 	keySet    *uint64set.Set
 	cb        memSegCallback
 	clearAt   int64
@@ -61,6 +61,11 @@ func newMemorySegment(name string, cb memSegCallback) *memorySegment {
 	}
 }
 
+// Len 返回 dataBytes 长度
+func (ms *memorySegment) Len() int {
+	return ms.dataBytes.Len()
+}
+
 // Flush 冻结 ByteSlice 同时将 keys 置空
 func (ms *memorySegment) Flush() ([]byte, []byte, *uint64set.Set) {
 	ms.mut.Lock()
@@ -70,11 +75,6 @@ func (ms *memorySegment) Flush() ([]byte, []byte, *uint64set.Set) {
 	ms.keySet = uint64set.NewSet()
 
 	return ms.dataBytes.FrozenReverse(), ms.keysBytes.Frozen(), keySet
-}
-
-// Len 返回 dataBytes 长度
-func (ms *memorySegment) Len() int {
-	return ms.dataBytes.Len()
 }
 
 // Clear 清空 keys
@@ -160,6 +160,9 @@ func (ms *memorySegment) Del(key []byte) {
 // Range 遍历每个 Key 并执行 fn 方法
 // pass 用于判断是否跳出 range 循环
 func (ms *memorySegment) Range(ifCopy bool, fn func(key, val Bytes), pass codec.PassFunc) {
+	ms.mut.RLock()
+	defer ms.mut.RUnlock()
+
 	rangeFn := ms.dataBytes.ForEach
 	if ifCopy {
 		rangeFn = ms.dataBytes.CopyForEach
@@ -183,6 +186,9 @@ func (ms *memorySegment) Range(ifCopy bool, fn func(key, val Bytes), pass codec.
 
 // Get 返回指定 Key 对应的 Value
 func (ms *memorySegment) Get(key []byte) ([]byte, bool) {
+	ms.mut.RLock()
+	defer ms.mut.RUnlock()
+
 	h := codec.HashKey(key)
 	if !ms.keySet.Has(h) {
 		return nil, false
