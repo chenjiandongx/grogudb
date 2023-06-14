@@ -168,9 +168,9 @@ DataBlock 由多条 record 一起组成，布局如下：
 *Metadata 布局：*
 
 ```docs
-+ -------------- | ------ | ------------------ | -------------- | --------------------- | ----------------- | ------------ + 
-| BucketSize(4B) | Bucket | RecordPosCount(4B) | RecordPosBlock | KeyEntityPosCount(4B) | KeyEntityPosBlock | Checksum(4B) |
-+ -------------- | ------ | ------------------ | -------------- | --------------------- | ----------------- | ------------ + 
++ -------------- | ------ | ------------------ | -------------- | ----------------- | ------------ + 
+| BucketSize(4B) | Bucket | RecordPosCount(4B) | RecordPosBlock | KeyEntityPosBlock | Checksum(4B) |
++ -------------- | ------ | ------------------ | -------------- | ----------------- | ------------ + 
 
 RecordPosBlock/KeyEntityPosBlock
 

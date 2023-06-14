@@ -530,8 +530,8 @@ func (bp BucketPos) AsBucketMetaSlice() BucketMetaSlice {
 // EncodeMetadata 编码 Metadata
 //
 // 布局如下
-// | BucketSize | Bucket | RecordPosCount | RecordPosBlock | KeyEntityPosCount | KeyEntityPosBlock | Checksum |
-// | 4B         | ..     | 4B             | ...             | 4B               | ...               | 4B       |
+// | BucketSize | Bucket | RecordPosCount | RecordPosBlock | KeyEntityPosBlock | Checksum |
+// | 4B         | ..     | 4B             | ...            | ...               | 4B       |
 //
 // RecordPosBlock/KeyEntityPosBlock 布局
 // | PositionStart | PositionEnd |
