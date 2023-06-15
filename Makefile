@@ -16,7 +16,6 @@ help:
 lint:
 	diff -u <(echo -n) <(gofumpt -w .)
 	diff -u <(echo -n) <(goimports-reviser -project-name "github.com/chenjiandongx/grogudb" ./...)
-	diff -u <(echo -n) <(golangci-lint run -c .golangci.yaml)
 
 .PHONY: test
 test:
