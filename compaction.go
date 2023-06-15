@@ -247,10 +247,10 @@ func (c *compactor) needCompat(diskSeg *diskSegment) (bool, error) {
 
 // doCompact 执行真正的 compact 逻辑
 func (c *compactor) doCompact(diskSegs ...*diskSegment) (*diskSegment, error) {
-	last := len(diskSegs) - 1 // 往更大的 seqID 靠近
+	first := 0 // 往更大的 seqID 靠近
 
-	seqID := diskSegs[last].seqID + 1 // 保证文件名不重复
-	path := diskSegs[last].path
+	seqID := diskSegs[first].seqID + 1 // 保证文件名不重复
+	path := diskSegs[first].path
 
 	dataTemp := fsx.DataTmpFilename(seqID, path)
 	keysTemp := fsx.KeysTmpFilename(seqID, path)

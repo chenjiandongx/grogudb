@@ -19,4 +19,4 @@ lint:
 
 .PHONY: test
 test:
-	${GO} test -parallel=8 ./...
+	./control.sh test

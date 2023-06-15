@@ -40,13 +40,13 @@ func TestCompact(t *testing.T) {
 		testCompact(t, 2000, opt, 5, 1)
 	})
 
-	t.Run("Compact: 8->1", func(t *testing.T) {
+	t.Run("Compact: 7->1", func(t *testing.T) {
 		opt := DefaultOptions()
 		opt.MaxMemSegmentBytes = 10 * KB
 		testCompact(t, 3000, opt, 7, 1)
 	})
 
-	t.Run("Compact: 8->3", func(t *testing.T) {
+	t.Run("Compact: 7->2", func(t *testing.T) {
 		opt := DefaultOptions()
 		opt.MaxMemSegmentBytes = 10 * KB
 		opt.MaxDiskSegmentBytes = 50 * KB
@@ -60,12 +60,28 @@ func testCompact(t *testing.T, iter int, opt Options, beforeSeg, afterSeg int64)
 		bucketPut(iter, bucket)
 
 		require.Equal(t, beforeSeg, db.Stats().DiskSegment)
+		prevIDs := make([]int64, 0)
+		for _, seg := range db.diskSegs {
+			prevIDs = append(prevIDs, seg.seqID)
+		}
+
 		compacted, err := db.Compact()
 		require.True(t, compacted)
 		require.NoError(t, err)
 
 		db.Gc()
 		require.Equal(t, afterSeg, db.Stats().DiskSegment)
+
+		nextIDs := make([]int64, 0)
+		for _, seg := range db.diskSegs {
+			nextIDs = append(nextIDs, seg.seqID)
+		}
+
+		// [10, 8, 6, 5] -> [11]
+		//  +1
+		if len(prevIDs) != len(nextIDs) && len(nextIDs) == 1 {
+			require.Equal(t, prevIDs[0]+1, nextIDs[0])
+		}
 
 		for i := 0; i < iter; i++ {
 			assertGet(t, bucket.Get, i, i)
